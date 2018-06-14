@@ -1,0 +1,288 @@
+---
+title: "Rと統計勉強会 第2回"
+author: "Hisamitsu Takaya"
+date: "2018/6/1"
+output: html_document
+---
+
+# Rと統計の勉強会 第2回
+
+### 統計の基礎
+
+#### 統計の種類
+- 記述統計
+得られたデータの特徴をわかりやすく解釈する。
+	- 代表値を用いる
+	- グラフを描く
+- 推計統計
+得られたデータは極々限られたデータであり、そのデータの大本となる集団（母集団）が存在し、我々が見ているデータはそこからサンプリングされた集団（標本集団）のデータに過ぎない。
+我々が知りたいのは母集団のパラメーターなので、標本集団のデータから母集団を推測する。
+	- 推定
+		- 点推定
+		標本から求められる一つの値をもって母数を推定する。
+		例）母平均、母分散
+			- 不偏推定量
+			- 一致推定量
+		- 区間推定
+		標本から母数が含まれる範囲を推定する。
+		例）95%信頼区間
+	- 検定（統計学的仮説検定）
+	ある仮説に対して、それが正しいかどうかを統計学的に検証する。
+	- ベイズ統計
+ベイズの定理に基づく統計学。
+
+#### 変数の種類
+- 質的変数
+  ＝カテゴリ変数  
+
+  カテゴリーに分けることができる変数のこと。
+  例）性別、血液型、病期
+
+- 量的変数
+連続的な数値として表される変数。
+例）年齢、体重、腫瘍マーカー値、出血量
+
+#### データの読み込み
+
+（復習）Web上のデータを読み込む際は`read.csv()`関数を使って直接指定するか、`RCurl`パッケージでURLを取得してから読み込む。  
+今回はGithubを使うので後者を用いる。
+
+```{r}
+#library(RCurl)
+#url <- getURL("https://raw.githubusercontent.com/takayaan/R_stat/master/data01.csv")
+#data <- read.csv(text=url)
+
+data <- read.csv('~/github/R_stat/data01.csv')
+# どんなデータかを確認
+head(data)
+```
+
+### 記述統計
+#### 1次元データ
+
+- ヒストグラム
+
+横軸に数値(度数)、縦軸に頻度を取りグラフ化したもの。
+データの（度数）分布を見るためには必須。
+```{r}
+hist(data$score)
+```
+
+- 平均
+
+全てのデータをサンプル数で割ったもの。  
+母平均を$\mu$、標本平均を$\bar x$とすることが多い。
+つまり、$n$個のサンプルのデータが$x_1,x_2,...,x_n$の時、$\bar x=\displaystyle \frac{1}{n}\sum_{i=1}^n{x_i}$
+
+Rでは`mean()`関数で計算する。
+
+```{r}
+mean(data$score)
+# 検算
+sum(data$score)/length(data$score)
+```
+- 分散
+
+データのばらつき度合いをみる値。平均偏差の二乗和の平均。
+大きければデータ間のばらつきが大きく、逆に小さいとばらつきが小さいと考える。
+母分散を$\sigma^2$、標本分散を$s^2$とすることが多い。
+$n$個のサンプルのデータが$x_1,x_2,...,x_n$の時、$s^2=\displaystyle \frac{1}{n}\sum_{i=1}^n{(x_i-\bar x)}$
+```{r}
+var(data$score)
+# 検算
+m <- mean(data$score)
+s <- 0
+for(i in 1:length(data$score)){
+	s <- s + (m - data$score[i])^2
+	v <- s/length(data$score)
+	}
+v
+```
+統計の分野では、分散は主に不偏推定量である不偏分散ことが多い。
+不偏分散：$\hat\sigma^2=\displaystyle \frac{1}{n-1}\sum_{i=1}^n{(x_i-\bar x)}$
+```{r}
+# 検算
+v*length(data$score)/(length(data$score)-1)
+```
+
+- 標準偏差
+
+分散の平方根。
+母標準偏差を$\sigma$、標本標準偏差を$s$と表すことが多い。
+```{r}
+sd(data$score)
+# 検算
+sqrt(var(data$score))
+```
+- （偏差値）
+
+- 中央値
+
+データを大きさの順に並べたときに、真ん中にくる値。
+```{r}
+median(data$score)
+# 検算
+if(length(data$score) %% 2 == 0){
+	(sort(data$score)[length(data$score)/2]+sort(data$score)[(length(data$score)/2)+1])/2
+}else{
+	sort(data$score)[(length(data$score)/2)+1]
+}
+```
+- 最大・最小値
+
+データの最小・最大値
+```{r}
+# 最小
+min(data$score)
+# 最大
+max(data$score)
+
+# 検算
+sort(data$score)[1]
+sort(data$score)[length(data$score)]
+```
+- 四分位数
+
+データを大きさの順に並べたときに、小さい方から1/4にある値を第1四分位数、大きい方から1/4にある値を第3四分位数という。
+```{r}
+# 第1四分位数
+quantile(data$score)[2]
+# 第3四分位数
+quantile(data$score)[4]
+```
+つまり中央値＝第2四分位数である。
+- 箱ひげ図
+
+中央値、四分位数、最大・最小値（・外れ値）を視覚的に表したグラフ。
+```{r}
+boxplot(data$score)
+```
+
+- クォンタイル値
+
+データを大きさの順に並べたとき、小さい方から$q:(1-q)$に分割する値を$q$分位数という。
+$q/100$分位数のことを特に$q$パーセンタイルという。
+```{r}
+# 60パーセンタイル値
+quantile(data$score,0.6)
+```
+- 最頻値
+
+データ内で最も頻繁に出現する値。
+```{r}
+names(which.max(table(data$score)))
+```
+
+--- 
+
+#### 2次元データ  
+
+Githubより、data02.csvを読み込んで下さい。
+
+```{r echo=FALSE}
+#url <- getURL("https://raw.githubusercontent.com/takayaan/R_stat/master/data02.csv")
+#data02 <- read.csv(text=url)
+
+data02 <- read.csv('~/github/R_stat/data02.csv')
+```
+
+```{r}
+# データの確認
+head(data02)
+```
+
+- 散布図
+
+横軸と縦軸に2項目のデータを対応させてプロットしたグラフ。
+$n$個のサンプルに2項目のデータ$(x_n,y_n)$が観測された時、(x_1,y_1),(x_2,y_2),...,(x_n,y_n)をプロットしたグラフ。
+```{r}
+plot(data02$math,data02$stat)
+```
+
+- 共分散
+
+2つのデータ間の大まかな関係性を示す。
+対応した2項目のデータの平均偏差の積の平均。
+データ$x$と$y$の共分散を$s_{xy}=\displaystyle \frac{1}{n}\displaystyle \sum_{i=1}^n{(x_i-\bar x)(y_i-\bar y)}$
+```{r}
+cov(data02$math,data02$stat)
+# 検算
+mx <- mean(data02$math)
+my <- mean(data02$stat)
+s <- 0
+for(i in 1:length(data02$math)){
+	s <- s + (mx - data02$math[i])*(my - data02$stat[i])
+	cov <- s/length(data$score)
+	}
+cov
+```
+分散と同じく不偏推定量は$n-1$で割る。
+```{r}
+# 検算
+cov*length(data02$math)/(length(data02$mat)-1)
+```
+- （積率）相関係数
+
+2つのデータ間の関係性を-1~1で表した尺度（共分散の正規化）。
+共分散をそれぞれの標準偏差の積で割った値。
+相関係数：$r=\displaystyle \frac{s_{xy}}{s_xs_y}$
+
+```{r}
+cor(data02$math,data02$stat)
+```
+相関係数は、0に近づくほど無相関で、1(-1)に近づくほど相関が高いと言える
+
+---
+
+#### クロス集計表  
+  
+|   |罹患|非罹患|
+|:---:|:---:|:---:|
+|曝露|$a$|$b$|
+|非曝露|$c$|$d$|
+
+  
+Githubより、data03.csvを読み込んで下さい。
+ただし、読み込みの際に`row.names=1`を`read.csv()`関数内に組み込んで下さい。
+```{r echo=FALSE}
+#url <- getURL("https://raw.githubusercontent.com/takayaan/R_stat/master/data03.csv")
+#data03 <- read.csv(text=url,row.names=1)
+
+data03 <- read.csv('~/github/R_stat/data03.csv', row.names=1)
+```
+
+```{r}
+# データの確認
+data03
+```
+
+- オッズ比
+
+2群における、事象の起こりやすさの比。例えば、曝露群(exp)群と非曝露群(non-e)群での罹患(posi)と非罹患(nega)のオッズ比は、$\displaystyle \frac{a/b}{c/d}=\frac{ad}{bc}$
+```{r}
+or <- (data03[1,1]*data03[2,2])/(data03[1,2]*data03[2,1])
+or
+```
+- 相対危険度
+
+曝露群と非曝露群での罹患率の比。
+つまり、$\displaystyle \frac{\frac{a}{a+b}}{\frac{c}{c+d}}$
+```{r}
+rr <- (data03[1,1]/sum(data03[1,]))/(data03[2,1]/sum(data03[2,]))
+rr
+```
+- ファイ係数
+
+行要素と列要素の関係性を示す指標。
+一般的なファイ係数は、サンプルサイズを$n$とした時、$\phi=\displaystyle \sqrt\frac{\chi^2}{n}$となる。
+2x2表の場合、ファイ係数：$\phi=\displaystyle \frac{ad-bc}{\sqrt{(a+b)(c+d)(a+c)(b+d)}}$である。
+```{r}
+phi <- ((data03[1,1]*data03[2,2])-(data03[1,2]*data03[2,1]))/
+		sqrt(sum(data03[1,])*sum(data03[2,])*sum(data03[,1])*sum(data03[,2]))
+```
+これは、曝露群と非曝露群での罹患・非罹患をダミー変数化した2つのデータ群での相関係数に等しい。
+```{r}
+ex <- c(rep(1,sum(data03[1,])),rep(0,sum(data03[2,])))
+pos <- c(rep(1,data03[1,1]),rep(0,data03[1,2]),rep(1,data03[2,1]),rep(0,data03[2,2]))
+cor(ex,pos)
+```
