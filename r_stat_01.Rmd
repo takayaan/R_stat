@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r include=FALSE}
-library(DiagrammeR)
+# library(DiagrammeR)
 
 knitr::opts_chunk$set(eval = TRUE)
 knitr::opts_chunk$set(echo = TRUE)
@@ -16,13 +16,10 @@ knitr::opts_chunk$set(results = "hide")
 ### 1. まずはRを使ってみよう
 
 - 関数
-```{r echo=FALSE, results="markup"}
-mermaid("
-graph LR
-A[a] --> B{関数F}
-B --> C(A)
-")
-```  
+
+$$
+F(a) = A
+$$
 
 `a`というデータの入力に対して`F`という関数で処理をすると、`A`という値が出てくる。つまり数学で言う所の$F(a)=A$と同じ。  
 
@@ -287,9 +284,12 @@ f <- function(x){x+1}
 f(1)
 ```
 ループ文や条件式を入れることで複雑な関数を作ることも可能（今のところはしない）だが、`function()`で関数を作っていることが理解できればok
+
 ### 6. グラフを書く
+
 デフォルト関数でも様々なグラフを描くことができる。
 それぞれのグラフ関数に描写のためのパラメーターが数多くあるが、それは今後実際に使用していく中で確認していく。
+
 - 散布図（Scatter plot）  
 
 点(x,y)をプロットしたグラフ

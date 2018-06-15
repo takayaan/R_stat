@@ -48,11 +48,20 @@ output: html_document
 今回はGithubを使うので後者を用いる。
 
 ```{r}
-#library(RCurl)
-#url <- getURL("https://raw.githubusercontent.com/takayaan/R_stat/master/data01.csv")
-#data <- read.csv(text=url)
+# RCurlパッケージがインストールされていない場合は、パッケージをインストールする
+install.packages("RCurl")
 
-data <- read.csv('~/github/R_stat/data01.csv')
+# Githubからデータを読み込む
+library(RCurl)
+url <- getURL("https://raw.githubusercontent.com/takayaan/R_stat/master/data01.csv")
+data <- read.csv(text=url)
+
+# PCからデータを読み込む
+# working directoryにファイルをおいている場合
+data <- read.csv('data01.csv')
+# working directory以外にファイルをおいている場合
+data <- read.csv('~/YOUR PATH/data01.csv')
+
 # どんなデータかを確認
 head(data)
 ```
